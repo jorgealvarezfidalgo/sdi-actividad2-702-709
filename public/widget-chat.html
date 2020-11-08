@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ofertas</title>
+</head>
+<body>
+<div class="container">
+    <h2 id="titulochat">
+    </h2>
+    <h3 id="creandochat" class="hidden">Creando chat...
+    </h3>
+    <div class="table-responsive">
+        <table class="table table-hover"
+               id="tableMessages">
+            <tbody id="tablaCuerpo">
+            <!--            <p th:text="${#dates.format(standardDate, 'dd-MM-yyyy HH:mm')}"></p>-->
+            </tbody>
+        </table>
+    </div>
+    <form class="navbar-form">
+        <div class="form-group">
+            <label for="message"></label><input name="messageText" type="text" id="message"
+                                                class="form-control" size="50"
+                                                placeholder="Escriba un mensaje">
+            <button type="button" id="boton-chat" class="btn btn-default">Enviar</button>
+        </div>
+
+    </form>
+</div>
+
+
+</body>
+</html>
+
+<script>
+    var ofertas;
+    clearInterval(intervaloMensajes);
+    clearInterval(intervaloChats);
+
+    function cargarMensajes() {
+        console.log("Cargando");
+        if(chatDesdeOferta) {
+            $("#titulochat").html("Chat con " + interlocutorEm + ' sobre ' + tituloOferta);
+            $.ajax({
+                url: URLbase + "/mensaje/oferta/" + idOfertaSeleccionada,
+                type: "GET",
+                data: {},
+                dataType: 'json',
+                headers: {"token": token},
+                success: function (respuesta) {
+                    mensajes = respuesta;
+                    actualizarTabla(mensajes);
+                },
+                error: function (error) {
+                    $("#contenedor-principal").load("widget-login.html");
+                }
+            });
+        } else {
+            $("#titulochat").html("Chat de " + emailComprador + " con " + emailVendedor + ' sobre ' + tituloOferta);
+            $.ajax({
+                url: URLbase + "/mensaje/chat/" + idChatSeleccionado,
+                type: "GET",
+                data: {},
+                dataType: 'json',
+                headers: {"token": token},
+                success: function (respuesta) {
+                    mensajes = respuesta;
+                    actualizarTabla(mensajes);
+                },
+                error: function (error) {
+                    $("#contenedor-principal").load("widget-login.html");
+                }
+            });
+        }
+    }
+
+    function actualizarTabla(mensajesMostrar) {
+        $("#tablaCuerpo").empty(); // Vaciar la tabla
+        for (i = 0; i < mensajesMostrar.length; i++) {
+            if (!mensajesMostrar[i].leido && mensajesMostrar[i].autor === interlocutorId) {
+                marcarMensajeLeido(mensajesMostrar[i]._id);
+            }
+
+            if(chatDesdeOferta) {
+                $("#tablaCuerpo").append(
+                    "<tr class='message' id='" + mensajesMostrar[i]._id + "'>" +
+                    "<td>" + (mensajesMostrar[i].autor === interlocutorId ? interlocutorEm : "Yo") + "</td>" +
+                    "<td>" + mensajesMostrar[i].text + "</td>" +
+                    "<td>" + mensajesMostrar[i].hora + "</td>" +
+                    (mensajesMostrar[i].autor !== interlocutorId && mensajesMostrar[i].leido ? ("<td>" + "Leído" + "</td>") : "") +
+                    "</tr>");
+            } else {
+                $("#tablaCuerpo").append(
+                    "<tr class='message' id='" + mensajesMostrar[i]._id + "'>" +
+                    "<td>" + getAutor(mensajesMostrar[i].autor) + "</td>" +
+                    "<td>" + mensajesMostrar[i].text + "</td>" +
+                    "<td>" + mensajesMostrar[i].hora + "</td>" +
+                    (mensajesMostrar[i].autor !== interlocutorId && mensajesMostrar[i].leido ? ("<td>" + "Leído" + "</td>") : "") +
+                    "</tr>");
+            }
+        }
+    }
+
+    $("#boton-chat").click(async function () {
+        let text = $("#message").val();
+        $("#message").val("");
+        enviarMensaje(text);
+        if ($(".message").length === 0) {
+            $("#boton-chat").attr("disabled", true);
+            $("#creandochat").removeClass("hidden");
+            await sleep(5500);
+            $("#creandochat").addClass("hidden");
+            $("#boton-chat").attr("disabled", false);
+        }
+        $("#tablaCuerpo").append(
+            "<tr class='message'>" +
+            "<td>" + "Yo" + "</td>" +
+            "<td>" + text + "</td>" +
+            "<td>" + new Date() + "</td>" +
+            "</tr>");
+
+    });
+
+    function enviarMensaje(text) {
+        if(chatDesdeOferta) {
+            $.ajax({
+                url: URLbase + "/mensaje/",
+                type: "POST",
+                data: {
+                    texto: text,
+                    oferta: idOfertaSeleccionada
+                },
+                dataType: 'json',
+                headers: {"token": token},
+                success: function (respuesta) {
+
+                },
+
+                error: function (error) {
+                    $("#contenedor-principal").load("widget-login.html");
+                }
+            });
+        } else {
+            $.ajax({
+                url: URLbase + "/chat/mensaje",
+                type: "POST",
+                data: {
+                    chat: idChatSeleccionado,
+                    texto: text
+                },
+                dataType: 'json',
+                headers: {"token": token},
+                success: function (respuesta) {
+                },
+                error: function (error) {
+                    $("#contenedor-principal").load("widget-login.html");
+                }
+            });
+        }
+    }
+
+    function marcarMensajeLeido(idMensaje) {
+        $.ajax({
+            url: URLbase + "/mensajeleido/" + idMensaje,
+            type: "PUT",
+            contentType: "application/json",
+            headers: {"token": token},
+            success: function (respuesta) {
+
+            },
+            error: function (error) {
+                $("#contenedor-principal").load("widget-login.html");
+            }
+        });
+    }
+
+    function getAutor(idAutor) {
+        if (chatSeleccionado.creador._id === idAutor)
+            return chatSeleccionado.creador.email;
+        else
+            return chatSeleccionado.vendedor.email;
+    }
+
+    async function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    cargarMensajes();
+    intervaloMensajes = setInterval(cargarMensajes, 5000);
+
+
+</script>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ofertas</title>
+</head>
+<body>
+<div class="table-responsive" id="widget-offers">
+    <h2>Ofertas disponibles</h2>
+    <table class="table table-hover"
+           id="tableOffers">
+        <thead>
+        <tr>
+            <th>Título</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Email</th>
+            <th class="col-md-1"></th>
+        </tr>
+        </thead>
+        <tbody id="tablaCuerpo">
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
+
+<script>
+    window.history.pushState("", "", "/cliente.html?w=ofertas");
+    var ofertas;
+    clearInterval(intervaloMensajes);
+    clearInterval(intervaloChats);
+
+    function cargarOfertas() {
+        $("#tablaCuerpo").html("");
+        $.ajax({
+            url: URLbase + "/oferta",
+            type: "GET",
+            data: {},
+            dataType: 'json',
+            headers: {"token": token},
+            success: function (respuesta) {
+                ofertas = respuesta;
+                actualizarTabla(ofertas);
+            },
+            error: function (error) {
+                $("#contenedor-principal").load("widget-login.html");
+            }
+        });
+    }
+
+    function actualizarTabla(ofertasMostrar) {
+        $("#tablaCuerpo").empty(); // Vaciar la tabla
+        for (i = 0; i < ofertasMostrar.length; i++) {
+            $("#tablaCuerpo").append(
+                "<tr id='" + ofertasMostrar[i]._id + "' class='" + ofertasMostrar[i].title + "'>" +
+                "<td>" + ofertasMostrar[i].title + "</td>" +
+                "<td>" + ofertasMostrar[i].description + "</td>" +
+                "<td>" + ofertasMostrar[i].cost + "</td>" +
+                "<td class='tdemail'>" + ofertasMostrar[i].email + "</td>" +
+                "<td>" +
+                "<a style=\"cursor: pointer;\" class='en-" + ofertasMostrar[i].title + "' onclick=chat('" + ofertasMostrar[i]._id + "','" + ofertasMostrar[i].vendedor + "','"
+                    + ofertasMostrar[i].email + "')>Contactar</a><br>" +
+                "</td>" +
+                "</tr>");
+            //la id tiene que ir entre comillas ' '
+        }
+    }
+
+    function chat(_id, intid, intem) {
+        idOfertaSeleccionada = _id;
+        interlocutorId = intid;
+        interlocutorEm = intem;
+        chatDesdeOferta = true;
+        tituloOferta= $("#"+_id).attr("class");
+        $("#contenedor-principal").load("widget-chat.html");
+    }
+
+    $("#chatbtn").click(function () {
+        $("#contenedor-principal").load("widget-chats.html");
+    });
+
+    $(".chatlist").removeClass("hidden");
+    cargarOfertas();
+
+
+
+</script>

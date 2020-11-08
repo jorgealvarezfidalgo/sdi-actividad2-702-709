@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="en" id="doc">
+<head>
+    <title>{% block titulo %} MyWallapop {% endblock %}</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/custom.css" />
+    <link rel="icon" type="image/png" href="/img/home.png">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    {% block scripts %} {% endblock %}
+</head>
+<body>
+
+
+<!-- Barra de Navegación superior -->
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#myNavbar">
+                <span class="icon-bar"></span> <span class="icon-bar"></span> <span
+                    class="icon-bar"></span>
+            </button>
+            <a href="/home"><img src="/img/home.png" alt="logo"/></a>
+        </div>
+
+
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav">
+                {% if usuario.rol=="ESTANDAR" %}
+                <li id="offers-menu" class="dropdown"><a
+                        class="dropdown-toggle" id="offerdropdown" data-toggle="dropdown"
+                        href="#">Gestionar ofertas<span
+                        class="caret"></span> </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/offer/add" id="addoffer">Agregar oferta</a></li>
+                        <li><a
+                                href="/offer/listown">Ver ofertas propias</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+                {% if usuario.rol=="ADMINISTRADOR" %}
+                <li id="users-menu" class="dropdown">
+                    <a id="userdropdown" class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    Gestionar usuarios<span class="caret"></span>
+                </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/user/list"
+                               id="seeusers">Ver usuarios</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+            {% if usuario.rol=="ESTANDAR" %}
+            <ul class="nav navbar-nav">
+                <li id="purchases-menu" class="dropdown"><a
+                        class="dropdown-toggle" id="purchasedropdown"
+                        data-toggle="dropdown" href="#">Ofertas<span
+                        class="caret"></span> </a>
+                    <ul class="dropdown-menu">
+                        <li><a
+                                href="/offer/listothers" id="purchasesearch"
+                        >Buscar ofertas</a></li>
+                        <li><a
+                                href="/offer/listpurchases">Ver productos comprados</a></li>
+                    </ul>
+                </li>
+            </ul>
+            {% endif %}
+            <ul class="nav navbar-nav navbar-right">
+
+                <li><span
+                        class="glyphicon glyphicon-email"
+                        id="navemail">{{usuario.email}}</span></li>
+                <li><span id="spsaldo" class="glyphicon glyphicon-saldo">{{usuario.saldo}}</span></li>
+                {% if usuario==null %}
+                <li><a href="/registrarse"
+                                                          id="signup">Registrarse<span
+                        class="glyphicon glyphicon-user"></span>
+                </a></li>
+
+                <li><a href="/identificarse"
+                                                          id="login">Identificarse<span
+                        class="glyphicon glyphicon-log-in"></span>
+                </a></li>
+                {% endif %}
+                {% if usuario!=null %}
+                <li><a href="/desconectarse"
+                                                         id="logout">Desconectarse<span
+                        class="glyphicon glyphicon-log-out"></span>
+                </a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container">
+    <script>
+        var mensaje = getUrlParameter('mensaje');
+        var tipoMensaje = getUrlParameter('tipoMensaje');
+        if (mensaje != "") {
+            if (tipoMensaje == "") {
+                tipoMensaje = 'alert-info';
+            }
+            $(".container")
+                .append("<div class='alert " + tipoMensaje + "'>" + mensaje + " </div>");
+        }
+
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' :
+                decodeURIComponent(results[1].replace(/\+/g, ' '));
+        };
+    </script>
+
+
+    <!-- Contenido -->
+    {% block contenido_principal %}
+    <!--Posiblecontenidopordefecto-->
+    {% endblock %}
+
+</div>
+<footer class="footer">
+    <div class="container">
+        <span class="text-muted" >MyWallapop</span>
+    </div>
+</footer>
+
+</body>
+</html>

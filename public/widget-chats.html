@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chats</title>
+</head>
+<body>
+<div class="table-responsive" id="widget-chats">
+    <h2>Tus chats</h2>
+    <table class="table table-hover"
+           id="tableChats">
+        <thead>
+        <tr>
+            <th>Email del vendedor</th>
+            <th>Título de la oferta</th>
+            <th>Mensajes sin leer</th>
+            <th class="col-md-1"></th>
+            <th class="col-md-1"></th>
+            <!--            <th class="col-md-1"></th>-->
+        </tr>
+        </thead>
+        <tbody id="tablaChatsCuerpo">
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
+
+<script>
+    window.history.pushState("", "", "/cliente.html?w=chats");
+    var chats;
+    clearInterval(intervaloMensajes);
+    clearInterval(intervaloChats);
+
+    function cargarChats() {
+        // $("#tablaChatsCuerpo").html("");
+        $.ajax({
+            url: URLbase + "/chat",
+            type: "GET",
+            data: {},
+            dataType: 'json',
+            headers: {"token": token},
+            success: function (respuesta) {
+                chats = respuesta;
+                actualizarTabla(chats);
+            },
+            error: function (error) {
+                $("#contenedor-principal").load("widget-login.html");
+            }
+        });
+    }
+
+    function actualizarTabla(chatsMostrar) {
+        $("#tablaChatsCuerpo").empty(); // Vaciar la tabla
+        for (i = 0; i < chatsMostrar.length; i++) {
+            $("#tablaChatsCuerpo").append(
+                "<tr id='" + chatsMostrar[i]._id + "' class='" + chatsMostrar[i].oferta.title + "'>" +
+                "<td>" + chatsMostrar[i].vendedor.email + "</td>" +
+                "<td>" + chatsMostrar[i].oferta.title + "</td>" +
+                "<td>" + chatsMostrar[i].noLeidos + "</td>" +
+                "<td>" +
+                "<a style=\"cursor: pointer;\" onclick=chat('" + chatsMostrar[i]._id + "','" + chatsMostrar[i].vendedor.email + "','"
+                + chatsMostrar[i].creador.email + "')>Contactar</a><br>" +
+                "<td>" +
+                "<a style=\"cursor: pointer;\" onclick=borrarChat('" + chatsMostrar[i]._id + "')>Borrar chat</a><br>" +
+                "</td>" +
+                "</tr>");
+            //la id tiene que ir entre comillas ' '
+        }
+    }
+
+    function chat(idChat, emailVend, emailComp) {
+        for (let i = 0; i < chats.length; i++) {
+            if (chats[i]._id === idChat) {
+                console.log(chats[i]);
+                chatSeleccionado = chats[i];
+                break;
+            }
+        }
+        let intid;
+        if(chatSeleccionado.creador.email===emailActual) {
+            intid = chatSeleccionado.vendedor._id;
+        } else {
+            intid = chatSeleccionado.creador._id;
+        }
+        interlocutorId = intid;
+        idChatSeleccionado = idChat;
+        emailVendedor = emailVend;
+        emailComprador = emailComp;
+        chatDesdeOferta = false;
+        tituloOferta = $("#" + idChat).attr("class");
+        $("#contenedor-principal").load("widget-chat.html");
+    }
+
+    function borrarChat(idChat) {
+        $("#" + idChat).remove();
+        $.ajax({
+            url: URLbase + "/chat/" + idChat,
+            type: "DELETE",
+            contentType: "application/json",
+            headers: {"token": token},
+            success: function (respuesta) {
+
+            },
+            error: function (error) {
+                $("#contenedor-principal").load("widget-login.html");
+            }
+        });
+    }
+
+    cargarChats();
+    intervaloChats = setInterval(cargarChats, 5000);
+</script>

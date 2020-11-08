@@ -1,0 +1,63 @@
+{% extends "base.html" %} {% block titulo %} Home {% endblock %}
+
+{% block contenido_principal %}
+<h2>Listado de ofertas creadas</h2>
+<p id="errorsaldo" class='text-danger'></p>
+<div class="table-responsive">
+	<table class="table table-hover"
+		   id="tableOffers">
+		<thead>
+		<tr>
+			<th>Título</th>
+			<th>Descripción</th>
+			<th>Precio</th>
+			<th>Fecha</th>
+			<th class="col-md-1"></th>
+			<th class="col-md-1"></th>
+			<th class="col-md-1"></th>
+		</tr>
+		</thead>
+		<tbody>
+		{% for offer in offers %}
+		<tr>
+			<td>{{offer.title}}</td>
+			<td>{{offer.description}}</td>
+			<td>{{offer.cost}}</td>
+			<td>{{offer.date}}</td>
+			<td><div>
+				<div>
+					<button type="button" id="{{offer._id.toString()}}"
+							class="btn btndes btn-info">{% if offer.destacada %}Destacada{% endif %}{% if !offer.destacada %}Normal{% endif %}</button>
+
+				</div>
+			</div></td>
+			<td><a href="/offer/delete/{{offer._id.toString()}}">Eliminar</a></td>
+		</tr>
+		{% endfor %}
+		<script>
+			/*<![CDATA[*/$(
+					".btndes")
+					.click(
+							function() {
+								console.log($(this).html());
+								if($(this).html()=="Destacada") {
+									$(this).html("Normal");
+									$.get("/offer/unhighlight/" + $(this).attr('id'));
+								}
+								else {
+									if(parseInt($("#spsaldo").text(),10)>=20.0) {
+										$(this).html("Destacada");
+										$("#spsaldo").text(Math.round(parseFloat($("#spsaldo").text()-20.0) * 100) / 100);
+										$.get("/user/saldo");
+										$.get("/offer/highlight/" + $(this).attr('id'));
+									} else {
+										$("#errorsaldo").text("El saldo es insuficiente.");
+									}
+								}
+							}); /*]]>*/
+		</script>
+		</tbody>
+	</table>
+</div>
+
+{% endblock %}
